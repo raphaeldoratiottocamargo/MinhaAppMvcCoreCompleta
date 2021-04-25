@@ -1,0 +1,1234 @@
+ASP.NET CORE MVC
+
+__________________________________________________________________________________________________
+
+Controllers
+
+	Verbos http
+		-> GET e POST (99% das vezes)
+		-> PUT e DELETE (mais comum para WEB APIs)
+		-> Existem outros (options, connect, trace, head, patch/merge)
+			-> https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+
+	Rotas
+		
+		-> Nas configurações de rota dentro do Startup.cs, pode se adicionar outras rotas, mas se atentar a manter sempre a rota padrão por último.
+		
+		-> Os nomes das actions devem ser os mesmos informados nas rotas
+		
+		-> Permite a sobrecarga de rotas através de da definição de rotas via Attributes
+			-> Definidos sobre o nome das Controllers ou sobre as Actions
+		
+		-> A definicição de rotas via Attributes funciona diretamente, sem necessidade de configuração adicional (no Asp.net MVC5 era necessário)
+		
+		-> O funcionamento das rotas na aplicação
+			-> No início da aplicação, as controllers são lidas e as definições de rotas via Attributes são adicionadas em um dicionário de rotas que fica disponível para aplicação.
+		
+		-> Restrição de Rota
+			-> Possibilidade de tipar os parâmetros que a rota recebe, caso os tipos recebidos não sejam compatíveis com o especifíciado, a rota não é encontrada, ou seja, mais segurança pra sua rota.
+				-> Exemplo:
+					[Route("pagina-inicial/{id:int}/{categoria:guid}")]
+					public IActionResult Index(int id, Guid categoria)
+					{
+						return View();
+					}
+
+
+			-> https://docs.microsoft.com/pt-br/aspnet/core/fundamentals/routing?view=aspnetcore-5.0
+				-> Procurar por Referência de restrição de rota
+
+__________________________________________________________________________________________________
+
+Models
+	-> DataAnnotations
+		-> https://docs.microsoft.com/pt-br/aspnet/core/tutorials/first-mvc-app/validation?view=aspnetcore-5.0
+		-> https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-5.0
+
+		-> Podem ser usadas para:
+			-> Validação de dados de preenchimento da model (ModelState)
+
+			-> Mapear banco de dados (EF)
+
+			-> Validação de formulários nas Razor Views
+
+__________________________________________________________________________________________________
+
+Views
+	-> Recursos
+		-> Razor Syntax
+		-> Tag Helpers
+		-> Custom Tag Helpers
+		-> _ViewStart
+		-> _ViewImports
+		-> Layouts
+		-> Formulários
+		-> Partial Views
+		-> View Components
+
+	-> Razor
+		-> Motor de processamento das views e também é o nome da sysntax
+		-> Gera o html que está conectado e conhece a model que será persistida
+			-> View fortemente tipada
+			-> Economiza código e entrega produtividade
+
+	__________________________________________________________________________________________________
+
+	-> TagHelpers
+		-> Recurso do razor para gerar html
+		-> Substitui o HTML helper do MVC 5
+		-> Sintaxe mais agradável e próximo do HTML
+		-> Utiliza tags inseridas dentro do html
+			-> Mais inteligente e conectado com a model
+
+		-> Comparativo HTML Helpers(Asp.net MVC5) e TagHelpers (Asp.net Core MVC)
+
+			-> HTML Helpers
+				-> Código c# gerando html
+					<div class="form-group">
+			            @Html.LabelFor(model => model.Nome, htmlAttributes: new { @class = "control-label col-md-2" })
+			            <div class="col-md-10">
+			                @Html.EditorFor(model => model.Nome, new { htmlAttributes = new { @class = "form-control" } })
+			                @Html.ValidationMessageFor(model => model.Nome, "", new { @class = "text-danger" })
+			            </div>
+			        </div>
+
+			-> Tag Helpers
+				-> Sintaxe mais agradável e próximo do HTML utilizando tags
+					<div class="form-group">
+			            <label asp-for="Nome" class="col-md-2 control-label"></label>
+			            <div class="col-md-10">
+			            	<input asp-for="Nome" class="form-control">
+			                <span asp-validation-for="Nome" class="text-danger"></span>
+			            </div>
+			        </div>
+
+	__________________________________________________________________________________________________
+
+	-> Partial Views
+		-> Pedaços de views(html) que podem ser reutilizados nas páginas através do uso de AJAX
+		-> São limitadas ao uso das models utilizadas pelas páginas que as renderizam
+
+		-> Exemplo de chamada
+			<partial name="_AvisoGeral"/>
+			ou 
+			@await Html.PartialAsync("_AvisoGeral")
+
+	__________________________________________________________________________________________________
+
+	-> View Components
+		-> Semelhantes as partial views, porém mais poderosos, e independentes das models que a página html está utilizando
+
+		-> Exemplo de uso
+
+			-> junto as pastas da solução (Controllers, Models, Views) criar uma pasta ViewComponents
+				-> Criar uma classe. Exemplo: CarrinhoViewComponent
+
+				using System.Threading.Tasks;
+				using Microsoft.AspNetCore.Mvc;
+
+				namespace MinhaDemoMvc.ViewComponents
+				{
+					[ViewComponent(Name="Carrinho")]
+					public class CarrinhoViewComponent: ViewComponent
+					{
+						public int ItensCarrinho { get; set; }
+
+						public CarrinhoViewComponent()
+						{
+							ItensCarrinho = 3;//poderia estar fazendo qualquer coisa aqui, acessando dados, etc
+						}
+
+						public async Task<IViewComponentResult> InvokeAsync()//Esse método é necessário na ViewComponent
+						{
+							return View(ItensCarrinho);//returnando um objeto complexo, como uma model
+						}
+					}
+				}
+
+			-> criar um diretório dentro da estrutura de pastas das views compartilhadas e dentro dela uma view chamada Default
+				-> Views
+					-> Shared
+						-> Carrinho
+							-> Default.cshtml
+
+							@*model aqui pode ser um objeto complexo, não precisa ser um int*@
+							@model int
+							<span class="fa fa-shopping-cart fa-2x">@Model</span>
+
+			-> "Registrando" o ComponentView na aplicação para ser usado como um TagHelper
+				-> No arquivo _ViewImports.cshtml
+					-> @addTagHelper "*, MinhaDemoMvc"
+
+			-> Chamando o ViewComponent em outras views
+				-> <vc:Carrinho></vc:Carrinho>
+
+	__________________________________________________________________________________________________
+
+	-> Bundling e Minification
+
+		-> Tive problemas para rodar no Visual Studio
+			-> Na janela 'Task Runner Explorer', as tasks não eram reconhecidas e ficavam desabilitadas
+				-> Usei uma extensão para bundling e Minification, e após a instalação, imediatamente entrou em funcionamento
+				-> No outro dia, mesmo com a extensão instalada, havia parado novamente
+					-> Desativando e ativando novamente a opção de 'Enable Task Runner', voltou a funcionar normalmente
+						-> Tools > Options > WEB > Enable Task Runner
+		
+		-> Bundling junta arquivos, diminuindo a quantidade de downloads
+		
+		-> Minification, retira espeços em branco, pulos de linha, comentários e reduz nomes de variáveis a letras(no js, mas no css não)
+
+		-> Exemplo de 'bundleconfig.json'
+			[
+			  {
+			    "outputFileName": "wwwroot/css/site_bundle.min.css",
+			    "inputFiles": [
+			      "wwwroot/lib/bootstrap/css/bootstrap.css",
+			      "wwwroot/css/site.css"
+			    ]
+			  },
+			  {
+			    "outputFileName": "wwwroot/js/site_bundle.min.js",
+			    "inputFiles": [
+			      "wwwroot/lib/jquery/jquery.js",
+			      "wwwroot/js/site.js"
+			    ]
+			  },
+			  {
+			    "outputFileName": "wwwroot/lib/bootstrap/js/bootstrap.min.js",
+			    "inputFiles": [
+			      "wwwroot/lib/bootstrap/js/bootstrap.js"
+			    ]
+			  }
+			]
+
+	__________________________________________________________________________________________________
+
+	-> Custom Tag Helpers
+		
+		-> utiliza "kebab case" para o nome das Tag Helpers e assim identifica a classe criada, ou seja, essa é a ligação
+			-> "kebab case" : tudo minúsculo, palavras divididas por traço (-)
+		
+		-> exemplo:
+			-> utilização no html razor
+				
+				<footer class="border-top footer text-muted">
+			        <div class="container">
+			            Minha App Modelo - <email-comercial email-domain="gmail.com">contato</email-comercial> -
+			            <email-comercial>suporte</email-comercial>
+			        </div>
+			    </footer>
+
+    		-> criação da classe
+				
+				using Microsoft.AspNetCore.Razor.TagHelpers;
+				using System.Threading.Tasks;
+
+				namespace DevIO.UI.Site.Extensions
+				{
+				    public class EmailComercialTagHelper : TagHelper
+				    {
+				        public string EmailDomain { get; set; } = "desenvolvedor.io";
+
+				        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+				        {
+				            output.TagName = "a";
+				            var content = await output.GetChildContentAsync();
+				            var target = $"{content.GetContent() }@{ EmailDomain}";
+				            output.Attributes.SetAttribute("href", "mailto:" + target);
+				            output.Content.SetContent(target);
+				        }
+				    }
+				}
+
+	__________________________________________________________________________________________________
+
+	-> Areas
+		-> Como se fossem módulos contendo estruturas MVC
+			-> necessitando inclusive da _ViewStart.cshtml para encontrar a página _Layout.cshtml
+			-> caso não queira usar o nome Areas na pasta da Solution, necessário adicionar código na Startup.cs
+				-> Dentro do método ConfigureServices
+
+					services.Configure<RazorViewEngineOptions>(options =>
+		            {
+		                options.AreaViewLocationFormats.Clear();
+		                options.AreaViewLocationFormats.Add("/Modulos/{2}/Views/{1}/{0}.cshtml");
+		                options.AreaViewLocationFormats.Add("/Modulos/{2}/Views/Shared/{0}.cshtml");
+		                options.AreaViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
+		            });
+
+		    -> necessário configurar as rotas para encontrar as Areas Criadas
+		    	-> Na configuração de rotas dentro do método Configure(Startup.cs)
+		    		app.UseMvc(routes =>
+		            {
+		                routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+		                //routes.MapRoute(name: "areas", template: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+		                
+		                routes.MapAreaRoute("AreaProdutos", "Produtos", "Produtos/{controller=Cadastro}/{action=Index}/{id?}");
+		                routes.MapAreaRoute("AreaVendas", "Vendas", "Vendas/{controller=Pedidos}/{action=Index}/{id?}");
+
+		            });
+
+		    -> exemplo de controller utiliza dentro de uma area (atentar ao uso do Attribute [Area("Produtos")])
+		    	using System.Linq;
+				using System.Threading.Tasks;
+
+				namespace DevIO.UI.Site.Modulos.Produtos.Controllers
+				{
+				    [Area("Produtos")]
+				    [Route("produtos")]
+				    public class CadastroController : Controller
+				    {
+				        [Route("lista")]
+				        public IActionResult Index()
+				        {
+				            return View();
+				        }
+
+				        [Route("busca")]
+				        public IActionResult Busca()
+				        {
+				            return View();
+				        }
+				    }
+				}
+
+	__________________________________________________________________________________________________
+
+	-> Injeção de Dependência
+
+		-> É nativo para o .Net Core, não necessitando do uso de ferramentas externas como o SimpleInjector por exemplo.
+
+		-> Dentro do método ConfigureServices (Startup.cs)
+
+			services.AddTransient<IPedidoRepository, PedidoRepository>();//recomendado o uso da Interface
+			//services.AddTransient<PedidoRepository>();//preferir o uso com interface, como na linha acima
+
+		-> Injetando dependências no MVC
+
+			-> O ideal é utilizar a injeção de depêndencia diretamente na controller
+				-> Diz respeito ao Principio de Responsabilidade Única do SOLID
+					-> A não utilização deixa fortemente acoplado e mudanças externas refletem na Instanciação(se o nome mudar)
+
+			-> Solicitar pelo construtor uma Interface, e sendo assim, aceitando classes que implementem essa interface
+				-> dentro o construtor, repassar esse valor recebido para uma classe declarada internamente que implemente a mesma interface
+					-> Quem faz o 'new' é o MVC, através da configuração realizada no ConfigureServices.
+						-> exemplo:
+
+							using DevIO.UI.Site.Data;
+							using Microsoft.AspNetCore.Mvc;
+							namespace DevIO.UI.Site.Controllers
+							{
+							    public class HomeController : Controller
+							    {
+							        private readonly IPedidoRepository _pedidoRepository;
+
+							        public HomeController(IPedidoRepository pedidoRepository)
+							        {
+							            _pedidoRepository = pedidoRepository;
+							        }
+
+							        public IActionResult Index()
+							        {
+							            var pedido =  _pedidoRepository.ObterPedido();
+
+							            return View();
+							        }
+
+							    }
+							}
+
+
+			-> Embora não seja o ideal, podemos resolver a injeção de dependência diretamente nas actions
+
+	        public IActionResult Index([FromServices] IPedidoRepository _pedidoRepository)
+	        {
+	            var pedido = _pedidoRepository.ObterPedido();
+
+	            return View();
+	        }
+
+
+			-> É possível realizar injeção de dependência diretamente na View, mas não é recomendado
+				
+				-> o ideal é popular sua model na controller e retornar para a view
+
+				-> Ainda assim, segue como utilizar o recurso
+
+					@using DevIO.UI.Site.Data
+					@inject IPedidoRepository PedidoRepository
+
+					Olá! 
+
+					@PedidoRepository.ObterPedido().Id
+
+	__________________________________________________________________________________________________
+
+	-> Entity Framework Core
+
+		-> Install-Package Microsoft.EntityFrameworkCore -Version 2.2.4
+		-> Install-Package Microsoft.EntityFrameworkCore.Relational -Version 2.2.4 (Para uso do Fluent API)
+		-> Install-Package Microsoft.EntityFrameworkCore.SqlServer -Version 2.2.4 (Para poder gerar Scripts)
+			-> Script-Migration -Context MeuDbContext
+
+		-> Configurando o DbContext:
+			-> Deve ser criado uma string de conexão dentro appsettings.json
+
+				"ConnectionStrings": {
+					"MeuDbContext": "(localdb)\\MSSQLLocalDB;Database=DBCursoNetCore;Trusted_Connection=True;MultipleActiveResultSets=true"
+				}
+
+			-> Criar a classe sua classe de contexto, que herda de DbContext
+				-> recebe parametros de configuração (tratados na Startup.cs)
+
+					using Microsoft.EntityFrameworkCore;
+
+					namespace DevIO.UI.Site.Data
+					{
+					    public class MeuDbContext : DbContext
+					    {
+					        public MeuDbContext(DbContextOptions options) 
+					            : base(options)
+					        {
+
+					        }
+					    }
+					}
+
+			-> No Startup.cs deve ser adicionado o DbContext
+				-> As configurações de opções do DbContext, devem receber a string de conexão
+					-> A string está no appsettings.json e deve ser recuperada através do IConfiguration
+						-> IConfiguration (Não precisa se preocupar em resolver essa injeção de depêndencia)
+
+							public IConfiguration Configuration { get; }
+
+					        public Startup(IConfiguration configuration)
+					        {
+					            Configuration = configuration;
+					        }
+
+					    -> Dentro do método ConfigureServices (Startup.cs)
+
+					    	services.AddDbContext<MeuDbContext>(options => 
+                				options.UseSqlServer(Configuration.GetConnectionString("MeuDbContext")));
+
+        __________________________________________________________________________________________________
+
+
+        -> CRUD
+
+        	-> Criar uma Entidade
+
+        	-> Adicionar a Entidade ao contexto dentro da sua classe de contexto
+
+        		public DbSet<Aluno> Alunos { get; set; }
+
+        	-> Dentro da controller, é possível realizar o CRUD
+        		-> Exemplo:
+
+        			using DevIO.UI.Site.Data;
+					using DevIO.UI.Site.Models;
+					using Microsoft.AspNetCore.Mvc;
+					using System;
+					using System.Linq;
+
+					namespace DevIO.UI.Site.Controllers
+					{
+					    public class TesteCrudController : Controller
+					    {
+					        private readonly MeuDbContext _contexto;
+
+					        public TesteCrudController(MeuDbContext contexto)
+					        {
+					            _contexto = contexto;
+					        }
+
+					        public IActionResult Index()
+					        {
+					            var aluno = new Aluno
+					            {
+					                Nome = "Eduardo",
+					                Email = "eduardo@eduardopires.net.br",
+					                DataNascimento = DateTime.Now
+					            };
+
+					            //Adicionando Aluno ao contexto e salvando no banco de Dados
+					            _contexto.Alunos.Add(aluno);
+					            _contexto.SaveChanges();
+
+					            //Obtendo de diversas maneiras
+					            var aluno2 = _contexto.Alunos.Find(aluno.Id);
+					            var aluno3 = _contexto.Alunos.FirstOrDefault(a => a.Email == "eduardo@eduardopires.net.br");
+					            var aluno4 = _contexto.Alunos.Where(a => a.Nome == "Eduardo");
+
+					            //Alterando
+					            aluno.Nome = "João";
+					            _contexto.Alunos.Update(aluno);
+					            _contexto.SaveChanges();
+
+					            //Removendo
+					            _contexto.Alunos.Remove(aluno);
+					            _contexto.SaveChanges();
+
+					            //retornando qualquer view para o teste
+					            return View("_Layout");
+					        }
+					    }
+					}
+
+
+        	-> Add-Migration "Inicial" -Verbose
+
+        	-> Update-Database -Verbose
+        		-> Se houver problemas, rodar o Visual Studio em modo Administrador
+
+        		-> Quando temos mais de um contexto, indicar o contexto
+        		Update-Database -Context MeuDbContext (Rodar no projeto Correto)
+
+    __________________________________________________________________________________________________
+
+	-> Asp.Net Identity
+
+		-> Install-Package Microsoft.AspNetCore.Identity.UI -Version 2.2.0
+
+		-> Adicionar Scaffolded item
+			-> Itentify
+				-> Account/Register
+				-> Account/Login
+
+			-> É gerado um arquivo texto (ScaffoldingReadme.txt) 
+
+				Support for ASP.NET Core Identity was added to your project
+				- The code for adding Identity to your project was generated under Areas/Identity.
+
+				Configuration of the Identity related services can be found in the Areas/Identity/IdentityHostingStartup.cs file.
+
+				If your app was previously configured to use Identity, then you should remove the call to the AddIdentity method from your ConfigureServices method.
+
+				The generated UI requires support for static files. To add static files to your app:
+				1. Call app.UseStaticFiles() from your Configure method
+
+				To use ASP.NET Core Identity you also need to enable authentication. To authentication to your app:
+				1. Call app.UseAuthentication() from your Configure method (after static files)
+
+				The generated UI requires MVC. To add MVC to your app:
+				1. Call services.AddMvc() from your ConfigureServices method
+				2. Call app.UseMvc() from your Configure method (after authentication)
+
+				The generated database code requires Entity Framework Core Migrations. Run the following commands:
+				1. dotnet ef migrations add CreateIdentitySchema
+				2. dotnet ef database update
+				 Or from the Visual Studio Package Manager Console:
+				1. Add-Migration CreateIdentitySchema
+				2. Update-Database
+
+				Apps that use ASP.NET Core Identity should also use HTTPS. To enable HTTPS see https://go.microsoft.com/fwlink/?linkid=848054.
+
+			-> As view criadas, não são views comuns, que possuem Controllers com a regra de negócio. São Razor Pages e sua regra de négócio está em uma classe que na solution está associada a esta Razor Page. 
+
+			-> Um arquivo chamado IdentityHostingStartup.cs é acriado e contém configurações que devem ser colocadas no Startup.cs
+				-> Após copiar o código, apagar este arquivo, caso contrário ocorrerá erros e a aplicação não consegue rodar.
+					-> Uma linha, referente a configuração de UI (referente a BootStrap) deve ser acrescentada dentro desse código já gerado
+
+						-> Dentro do método ConfigureServices
+
+							services.AddDbContext<AspNetCoreIdentityContext>(options =>
+				                    options.UseSqlServer(Configuration.GetConnectionString("AspNetCoreIdentityContextConnection")));
+
+				            services.AddDefaultIdentity<IdentityUser>()
+				                .AddDefaultUI(UIFramework.Bootstrap4)//linha adicionada
+				                .AddEntityFrameworkStores<AspNetCoreIdentityContext>();
+
+				        -> Dentro do método Configure
+
+				        	app.UseStaticFiles(); //conforme o readme, é necessário, mas já estava aqui
+				            app.UseCookiePolicy();
+
+				            app.UseAuthentication();//conforme o readme, é necessário e foi adicionado
+
+			            	//conforme o readme, é necessário, mas já estava aqui
+				            app.UseMvc(routes =>
+				            {
+				                routes.MapRoute(
+				                    name: "default",
+				                    template: "{controller=Home}/{action=Index}/{id?}");
+				            });
+
+	        -> Uma Partial é criada, e pode ser facilmente adicionada ao código da view para exeibição
+
+	        	-> dentro do html da navbar, antes da lista não ordenada com os itens do menu, é chamada a partial
+
+	        		<partial name="_LoginPartial"/>
+
+			-> Add-Migration Identity
+			
+			-> Update-Database	       
+
+	__________________________________________________________________________________________________
+
+	-> Autenticação e Autorização
+
+		-> Autenticação 
+			-> Utilizando o attribute [Authorize] sobre as actions, ou sobre as controllers
+				-> Se atentar que o atributo se chama autorização, mas trata de autenticação
+
+			-> Exceções podem ser concedidas através do attribute [AllowAnonymous] 
+
+			-> Exemplo:
+
+				using AspNetCoreIdentity.Models;
+				using Microsoft.AspNetCore.Authorization;
+				using Microsoft.AspNetCore.Mvc;
+				using System;
+				using System.Collections.Generic;
+				using System.Diagnostics;
+				using System.Linq;
+				using System.Threading.Tasks;
+
+				namespace AspNetCoreIdentity.Controllers
+				{
+				    [Authorize]
+				    public class HomeController : Controller
+				    {
+				        [AllowAnonymous]
+				        public IActionResult Index()
+				        {
+				            return View();
+				        }
+
+				        public IActionResult Privacy()
+				        {
+				            return View();
+				        }
+
+				        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+				        public IActionResult Error()
+				        {
+				            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+				        }
+				    }
+				}
+
+		-> Autorização
+			
+			-> Roles (Papéis)
+
+				-> Statup.cs
+					-> Método ConfigureService
+						-> Adicionar as Roles
+							-> Exemplo:
+
+								services.AddDefaultIdentity<IdentityUser>()
+					                .AddRoles<IdentityRole>()//linha adicionada
+					                .AddDefaultUI(UIFramework.Bootstrap4)//linha adicionada anteriormente, não vem com o scaffold
+					                .AddEntityFrameworkStores<AspNetCoreIdentityContext>();
+
+
+				-> Attribute [Authorize(Roles = "Admin, Gestor")]
+
+					using AspNetCoreIdentity.Models;
+					using Microsoft.AspNetCore.Authorization;
+					using Microsoft.AspNetCore.Mvc;
+					using System;
+					using System.Collections.Generic;
+					using System.Diagnostics;
+					using System.Linq;
+					using System.Threading.Tasks;
+
+					namespace AspNetCoreIdentity.Controllers
+					{
+					    [Authorize]
+					    public class HomeController : Controller
+					    {
+					        [AllowAnonymous]
+					        public IActionResult Index()
+					        {
+					            return View();
+					        }
+
+					        public IActionResult Privacy()
+					        {
+					            return View();
+					        }
+
+					        [Authorize(Roles = "Admin, Gestor")]
+					        public IActionResult Secret()
+					        {
+					            return View();
+					        }
+
+					        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+					        public IActionResult Error()
+					        {
+					            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+					        }
+					    }
+					}
+
+
+				-> Banco de Dados 
+					-> Até o momento não existe tela ou scaffold para esse gerenciamento
+					-> Portanto, pode ser feito a tela de gerenciamento
+					-> Neste caso, alterar direto no banco de dados
+
+					-> Tabela 'AspNetRoles'
+
+						ID 		NAME 			NORMALIZED NAME 	CONCURRENCYSTAMP
+						1		Admin			ADMIN				NULL
+						2		Gestor			GESTOR				NULL
+						3		Visualizador	VISUALIZADOR		NULL
+
+					-> Tabela 'AspNetUsers'
+						-> Essa tabela já está preenchida e precisamos do Id(GUID) do Usuário
+							-> Exemplo:	
+								-> bc023ffc-9064-4156-8e30-54873b304a5d		rph13dc@hotmail.com
+
+					-> Tabela 'AspNetUserRoles'
+
+						USERID									ROLEID
+						bc023ffc-9064-4156-8e30-54873b304a5d	1
+
+				*** Dentro do csharp, pode ser visto alguns dados que são recebidos via cook, acessando o objeto 'User'
+
+			-> Claims
+
+				-> Claims são declarações
+					-> Podem guardar a informação que for necessária
+					-> As informações do usuário ficam armazenadas em cookies na ocasião do Login
+					-> As informações do usuário ficam disponíveis no contexto.User
+
+				-> Implementação básica
+					-> Cada Claim:
+						-> um registro no Banco de Dados
+						-> uma action com attribute [Authorize(Policy = "NomePolicy")]
+						-> registro dessa policy no Startup.cs
+
+						-> Tabela 'AspNetUserClaims'
+							
+							ID 		USERID									CLAIMTYPE		CLAIMVALUE
+							1		bc023ffc-9064-4156-8e30-54873b304a5d	PodeExcluir		PodeExcluir
+
+
+						-> Controller
+
+							[Authorize(Policy = "PodeExcluir")]
+					        public IActionResult SecretClaim()
+					        {
+					            return View("Secret");
+					        }
+
+					    -> Startup.cs
+
+					    	-> Dentro do método ConfigureServices
+
+					    		services.AddAuthorization(options => {
+					                options.AddPolicy("PodeExcluir", policy => policy.RequireClaim("PodeExcluir"));
+					                options.AddPolicy("PodeLer", policy => policy.RequireClaim("PodeLer"));
+					                options.AddPolicy("PodeAdicionar", policy => policy.RequireClaim("PodeAdicionar"));
+					            });
+
+				-> Implementação recomendada pela Microsot
+					->  Cada Claim
+						-> um registro no Banco de Dados, com diversos valores divididos por vírgula(,)
+						-> uma action, semelhante ao exemplo anterior, com attribute [Authorize(Policy = "NomePolicy")]
+						-> Uma classe representando uma Permissão implementando IAuthorizationRequirement
+						-> Um Handler para essa permissão
+						-> registro dessa policy no Startup.cs, embora um pouco diferente da implementação anterior
+						-> Configurar a injeção de dependência para esse Handler no Startup.cs
+
+						-> Tabela 'AspNetUserClaims'
+							
+							ID 		USERID									CLAIMTYPE		CLAIMVALUE
+							2		bc023ffc-9064-4156-8e30-54873b304a5d	Permissao		PodeLer,PodeEscrever 
+
+						-> Controller
+
+							[Authorize(Policy = "PodeEscrever")]
+					        public IActionResult SecretClaimGravar()
+					        {
+					            return View("Secret");
+					        }
+
+					    -> Classe PermissaoNecessaria e Handler
+
+					    	using Microsoft.AspNetCore.Authorization;
+							using System.Threading.Tasks;
+
+							namespace AspNetCoreIdentity.Extensions
+							{
+							    public class PermissaoNecessaria : IAuthorizationRequirement 
+							    {
+							        public string Permissao { get; }
+
+							        public PermissaoNecessaria(string permissao)
+							        {
+							            Permissao = permissao;
+							        }
+							    }
+
+							    public class PermissaoNecessariaHandler : AuthorizationHandler<PermissaoNecessaria>
+							    {
+							        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissaoNecessaria requisito)
+							        {
+							            if (context.User.HasClaim(c => c.Type == "Permissao" && c.Value.Contains(requisito.Permissao)))
+							            {
+							                context.Succeed(requisito);
+							            }
+
+							            return Task.CompletedTask;
+							        }
+							    }
+							}
+
+						-> registro de Policies no Startup.cs e Injeção de dependência para o handler 
+							-> no método ConfigureServices
+
+								services.AddAuthorization(options => {
+					                options.AddPolicy("PodeLer", policy => policy.Requirements.Add(new PermissaoNecessaria("PodeLer")));
+					                options.AddPolicy("PodeEscrever", policy => policy.Requirements.Add(new PermissaoNecessaria("PodeEscrever")));
+					            });
+
+					            services.AddSingleton<IAuthorizationHandler, PermissaoNecessariaHandler>();
+
+				-> Implementação Dev.IO
+					
+					-> Não precisa escrever policies
+					-> um registro no Banco de Dados, com diversos valores divididos por vírgula(,)
+					-> Criação de uma classe ClaimsAuthorize
+					-> uma action com attribute [ClaimsAuthorize("Produtos","Ler")]
+
+					-> Tabela 'AspNetUserClaims'
+
+						ID 		USERID									CLAIMTYPE		CLAIMVALUE
+						3		bc023ffc-9064-4156-8e30-54873b304a5d	Produtos		Ler,Adicionar,Alterar,Excluir
+
+
+				    -> Criar classe ClaimsAuthorize
+
+				    	using System.Linq;
+						using System.Security.Claims;
+						using Microsoft.AspNetCore.Http;
+						using Microsoft.AspNetCore.Mvc;
+						using Microsoft.AspNetCore.Mvc.Filters;
+
+						namespace AspNetCoreIdentity.Extensions
+						{
+						    public class CustomAuthorization
+						    {
+						        public static bool ValidarClaimsUsuario(HttpContext context, string claimName, string claimValue)
+						        {
+						            return context.User.Identity.IsAuthenticated &&
+						                context.User.Claims.Any(c => c.Type == claimName && c.Value.Contains(claimValue));
+						        }
+						    }
+
+						    public class ClaimsAuthorizeAttribute : TypeFilterAttribute
+						    {
+						        public ClaimsAuthorizeAttribute(string claimName, string claimValue) : base(typeof(RequisitoClaimFilter))
+						        {
+						            Arguments = new object[] { new Claim(claimName, claimValue) };
+						        }
+						    }
+
+						    public class RequisitoClaimFilter : IAuthorizationFilter
+						    {
+						        private readonly Claim _claim;
+
+						        public RequisitoClaimFilter(Claim claim)
+						        {
+						            _claim = claim;
+						        }
+
+						        public void OnAuthorization(AuthorizationFilterContext context)
+						        {
+						        	//Esse if não é necessário porque existe uma rota padrão para retorno, caso queira customaizar o retorno esse código pode fazer isso
+									if (!context.HttpContext.User.Identity.IsAuthenticated)
+						            {
+						                context.Result = new RedirectToRouteResult(
+						                    new RouteValueDictionary(new { area = "Identity", page = "/Account/Login", ReturnUrl = context.HttpContext.Request.Path.ToString() }));
+						                return;
+						            }
+
+						            if (!CustomAuthorization.ValidarClaimsUsuario(context.HttpContext, _claim.Type, _claim.Value))
+						            {
+						                context.Result = new ForbidResult();
+						            }
+						        }
+						    }
+						}
+
+
+					-> Controller
+
+						[ClaimsAuthorize("Produtos","Ler")]
+				        public IActionResult ClaimsCustom()
+				        {
+				            return View("Secret");
+				        }
+
+					-> Criando Extension Methods Razor utilizando a classe CustomAuthorization
+
+						-> Extension Methods
+
+							using Microsoft.AspNetCore.Html;
+							using Microsoft.AspNetCore.Http;
+							using Microsoft.AspNetCore.Mvc.Razor;
+
+							namespace AspNetCoreIdentity.Extensions
+							{
+							    public static class RazorExtensions
+							    {
+							        public static bool IfClaim(this RazorPage page, string claimName, string claimValue)
+							        {
+							            return CustomAuthorization.ValidarClaimsUsuario(page.Context, claimName, claimValue);
+							        }
+
+							        public static string IfClaimShow(this RazorPage page, string claimName, string claimValue)
+							        {
+							            return CustomAuthorization.ValidarClaimsUsuario(page.Context, claimName, claimValue)? string.Empty : "disabled";
+							        }
+
+							        public static IHtmlContent IfClaimShow(this IHtmlContent page, HttpContext context, string claimName, string claimValue)
+							        {
+							            return CustomAuthorization.ValidarClaimsUsuario(context, claimName, claimValue)? page : null;
+							        }
+							    }
+							}
+
+						-> Utilizando na View Razor 
+
+							@using AspNetCoreIdentity.Extensions
+
+							//Não renderiza o trecho do html se não tiver permissão
+							@{
+							    if (this.IfClaim("Produtos", "Adicionar"))
+							    {
+							        <p> Você só verá isso se tiver permissão de adicionar</p>
+							    }
+							}
+
+							//Não renderiza o conteúdo html se não tiver permissão, neste caso um link
+							<div>
+							    @Html.ActionLink("Privacy", "Privacy").IfClaimShow(Context, "Produtos", "Adicionar")
+							</div>
+
+							//Desabilita um componente html através da escrita sem Encoding diretamente na classe css
+							<div>
+							    <br>
+							    <a href="#" class="btn btn-danger @Html.Raw(this.IfClaimShow("Produtos", "Adicionar"))">Excluir</a>
+							</div>
+	__________________________________________________________________________________________________
+
+	Configurações
+
+	-> Startup.cs
+
+		-> Separar as configurações que estão dentro do método ConfigureServices utilizando Etension Methods
+
+			-> Startup.cs
+				
+				public void ConfigureServices(IServiceCollection services)
+		        {
+		            services.AddIdentityConfig(Configuration);
+		            services.AddAuthorizationConfig();
+		            services.ResolveDependencies();
+
+		            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+		        }
+
+		    -> IdentityConfig.cs
+
+		    	using AspNetCoreIdentity.Areas.Identity.Data;
+				using AspNetCoreIdentity.Extensions;
+				using Microsoft.AspNetCore.Builder;
+				using Microsoft.AspNetCore.Http;
+				using Microsoft.AspNetCore.Identity;
+				using Microsoft.AspNetCore.Identity.UI;
+				using Microsoft.EntityFrameworkCore;
+				using Microsoft.Extensions.DependencyInjection;
+				using Microsoft.Extensions.Configuration;
+
+				namespace AspNetCoreIdentity.Configuration
+				{
+				    public static class IdentityConfig
+				    {
+				        public static IServiceCollection AddAuthorizationConfig(this IServiceCollection services)
+				        {
+				            services.AddAuthorization(options => {
+				                //Implementação básica um registro no banco, uma policy registrada
+				                options.AddPolicy("PodeExcluir", policy => policy.RequireClaim("PodeExcluir"));
+				                options.AddPolicy("PodeLer", policy => policy.RequireClaim("PodeLer"));
+				                options.AddPolicy("PodeAdicionar", policy => policy.RequireClaim("PodeAdicionar"));
+
+				                //Implementação indicada pela Microsoft, uma linha no banco, diversas policies registradas
+				                options.AddPolicy("PodeLer", policy => policy.Requirements.Add(new PermissaoNecessaria("PodeLer")));
+				                options.AddPolicy("PodeEscrever", policy => policy.Requirements.Add(new PermissaoNecessaria("PodeEscrever")));
+				            });
+
+				            return services;
+				        }
+
+				        public static IServiceCollection AddIdentityConfig(this IServiceCollection services, IConfiguration configuration)
+				        {
+				            services.Configure<CookiePolicyOptions>(options =>
+				            {
+				                options.CheckConsentNeeded = context => true;
+				                options.MinimumSameSitePolicy = SameSiteMode.None;
+				            });
+
+				            services.AddDbContext<AspNetCoreIdentityContext>(options =>
+				                    options.UseSqlServer(configuration.GetConnectionString("AspNetCoreIdentityContextConnection")));
+
+				            services.AddDefaultIdentity<IdentityUser>()
+				                .AddRoles<IdentityRole>()//linha adicionada
+				                .AddDefaultUI(UIFramework.Bootstrap4)//linha adicionada
+				                .AddEntityFrameworkStores<AspNetCoreIdentityContext>();
+
+				            return services;
+				        }
+				    }
+				}
+
+		    -> DependencyInjectionConfig.cs
+
+		    	using AspNetCoreIdentity.Extensions;
+				using Microsoft.AspNetCore.Authorization;
+				using Microsoft.Extensions.DependencyInjection;
+
+				namespace AspNetCoreIdentity.Configuration
+				{
+				    public static class DependencyInjectionConfig
+				    {
+				        public static IServiceCollection ResolveDependencies(this IServiceCollection services)
+				        {
+				            services.AddSingleton<IAuthorizationHandler, PermissaoNecessariaHandler>();
+
+				            return services;
+				        }
+
+				    }
+				}
+
+	__________________________________________________________________________________________________
+
+	-> Configurando diferentes ambientes para aplicação
+		
+		-> No arquivo "launchSettings.json" criar os profiles para:
+			-> Development
+			-> Staging
+			-> Production
+
+		-> As informações que devem ser referentes a cada profile, devem ser retiradas do arquivo global "appsettings.json"
+			-> Deve-se criar os arquivos:
+				-> appsettings.Development.json
+				-> appsettings.Staging.json
+				-> appsettings.Production.json
+			-> As informações devem ser colocadas para os 3 profiles
+				-> exemplo: string de conexão
+
+
+		-> Alterar o construtor norma da classe Startup.cs que está recebendo uma Configuration por Injeção de Dependência
+			
+			-> De
+
+				public Startup(IConfiguration configuration)
+		        {
+		            Configuration = configuration;
+		        }
+
+			-> Para
+
+				public Startup(IHostingEnvironment hostEnvironment)
+		        {
+		            var builder = new ConfigurationBuilder()
+		                .SetBasePath(hostEnvironment.ContentRootPath)
+		                .AddJsonFile("appsettings.json", true, true)
+		                .AddJsonFile($"appsettings.{hostEnvironment.EnvironmentName}.json", true, true)
+		                .AddEnvironmentVariables();
+
+		            Configuration = builder.Build();
+		        }
+	__________________________________________________________________________________________________
+
+	-> User Secrects
+
+		-> Um arquivo json de configuração que utilizado conforme é adicionado ao builder do HostEnvironment para gerar o Configuration
+
+			public Startup(IHostingEnvironment hostEnvironment)
+	        {
+	            var builder = new ConfigurationBuilder()
+	                .SetBasePath(hostEnvironment.ContentRootPath)
+	                .AddJsonFile("appsettings.json", true, true)
+	                .AddJsonFile($"appsettings.{hostEnvironment.EnvironmentName}.json", true, true)
+	                .AddEnvironmentVariables();
+
+	            if (hostEnvironment.IsDevelopment())
+	            {
+	                builder.AddUserSecrets<Startup>();
+	            }
+
+	            Configuration = builder.Build();
+	        }
+
+	    -> Na solution, botão direito em cima do projeto, e escolher a opção "Manage User Secrets" (isso cria o arquivo na solution)
+
+	    	-> Neste caso, escondendo dos outros usuários a string de conexão do ambiente de Development
+
+	__________________________________________________________________________________________________
+
+	-> AutoMapper
+
+		-> Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection -Version 6.1.0
+
+	__________________________________________________________________________________________________
+
+	-> Gobalization
+
+		-> Para saber a Cultura que está sendo utilizada
+			-> Em qualquer View
+				-> @System.Globalization.CultureInfo.CurrentCulture
+
+		-> Para corrigir o uso da localização do Asp.Net Core
+			-> Startup.cs
+			
+				-> Dentro do método Configure
+				
+					var defaultCulture = new CultureInfo("pt-BR");
+					
+					var localizationOptions = new RequestLocalizationOptions
+					{
+						DefaultRequestCulture = new RequestCulture(defaultCulture),
+						SupportedCultures = new List<CultureInfo> { defaultCulture },
+						SupportedUICultures = new List<CultureInfo> { defaultCulture }
+					};
+					app.UseRequestLocalization(localizationOptions);
+
+		-> Para corrigir o javascript
+			
+			-> _ValidationScriptsPartial.cshtml (Dentro de Views>Shared)
+
+				<script>
+					$.validator.methods.range = function (value, element, param) {
+						var globalizedValue = value.replace(",", ".");
+						return this.optional(element) || (globalizedValue >= param[0] && globalizedValue <= param[1]);
+					};
+
+					$.validator.methods.number = function (value, element) {
+						return this.optional(element) || /-?(?:\d+|\d{1,3}(?:[\s\.,]\d{3})+)(?:[\.,]\d+)?$/.test(value);
+					};
+
+					$.validator.methods.date = function (value, element) {
+						var date = value.split("/");
+						return this.optional(element) || !/Invalid|NaN/.test(new Date(date[2], date[1], date[0]).toString());
+					};
+				</script>
+
+		-> Para corrigir mensagens que ainda são exibidas em inglês pelo Asp.Net Core
+			-> Startup.cs
+				-> ConfigureServices
+					-> Adicionar opções no momento da adição do MVC
+
+						services.AddMvc(o =>
+						{
+							o.ModelBindingMessageProvider.SetAttemptedValueIsInvalidAccessor((x, y) => "O valor preenchido é inválido para este campo.");
+							o.ModelBindingMessageProvider.SetMissingBindRequiredValueAccessor(x => "Este campo precisa ser preenchido.");
+							o.ModelBindingMessageProvider.SetMissingKeyOrValueAccessor(() => "Este campo precisa ser preenchido.");
+							o.ModelBindingMessageProvider.SetMissingRequestBodyRequiredValueAccessor(() => "É necessário que o body na requisição não esteja vazio.");
+							o.ModelBindingMessageProvider.SetNonPropertyAttemptedValueIsInvalidAccessor((x) => "O valor preenchido é inválido para este campo.");
+							o.ModelBindingMessageProvider.SetNonPropertyUnknownValueIsInvalidAccessor(() => "O valor preenchido é inválido para este campo.");
+							o.ModelBindingMessageProvider.SetNonPropertyValueMustBeANumberAccessor(() => "O campo deve ser numérico.");
+							o.ModelBindingMessageProvider.SetUnknownValueIsInvalidAccessor((x) => "O valor preenchido é inválido para este campo.");
+							o.ModelBindingMessageProvider.SetValueIsInvalidAccessor((x) => "O valor preenchido é inválido para este campo.");
+							o.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(x => "O campo deve ser numérico.");
+							o.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(x => "Este campo precisa ser preenchido.");
+						
+						}).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+		
+		-> Para validar campo Valor(Moeda) como Decimal através de attributes(DataAnnotations)
+			-> Criar no projeto de apresentação do App, uma pasta Extensions
+				-> Dentro dela criar uma classe MoedaAttribute (Valida somente do lado do Server)
+
+				-> Para validar também no lado do Client, necessário criar um Adapter e um Provider
+					-> Pode ser criado dentro do mesmo arquivo.
+
+				-> O provider precisa ser registrado nas Injeções de Dependência
+
+				-> Código
+
+					using Microsoft.AspNetCore.Mvc.DataAnnotations;
+					using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+					using Microsoft.Extensions.Localization;
+					using System;
+					using System.ComponentModel.DataAnnotations;
+					using System.Globalization;
+
+					namespace DevIO.App.Extensions
+					{
+						public class MoedaAttribute : ValidationAttribute
+						{
+							protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+							{
+								try
+								{
+									var moeda = Convert.ToDecimal(value, new CultureInfo("pt-BR"));
+								}
+								catch (Exception)
+								{
+									return new ValidationResult("Moeda em formato inválido");
+								}
+
+								return ValidationResult.Success;
+							}
+						}
+
+						public class MoedaAttributeAdapter : AttributeAdapterBase<MoedaAttribute>
+						{
+							public MoedaAttributeAdapter(MoedaAttribute attribute, IStringLocalizer stringLocalizer) : base(attribute, stringLocalizer)
+							{
+							}
+
+							public override void AddValidation(ClientModelValidationContext context)
+							{
+								if (context == null) throw new ArgumentNullException(nameof(context));
+
+								MergeAttribute(context.Attributes, "data-val", "true");
+								MergeAttribute(context.Attributes, "data-moeda", GetErrorMessage(context));
+								MergeAttribute(context.Attributes, "data-number", GetErrorMessage(context));
+							}
+
+							public override string GetErrorMessage(ModelValidationContextBase validationContext)
+							{
+								return "Moeda em formato inválido";
+							}
+						}
+
+						public class MoedaValidationAttributeAdapterProvider : IValidationAttributeAdapterProvider
+						{
+							private readonly IValidationAttributeAdapterProvider _baseProvider = new ValidationAttributeAdapterProvider();
+
+							public IAttributeAdapter GetAttributeAdapter(ValidationAttribute attribute, IStringLocalizer stringLocalizer)
+							{
+								if (attribute is MoedaAttribute moedaAttribute)
+									return new MoedaAttributeAdapter(moedaAttribute, stringLocalizer);
+
+								return _baseProvider.GetAttributeAdapter(attribute, stringLocalizer);
+							}
+						}
+					}
+
+				-> Na ProdutoViewModel utilizar o novo attribute criado
+					[Moeda]
+					[Required(ErrorMessage = "O campo {0} é obrigatório")]
+					public decimal Valor { get; set; }
+
+				-> Injeção de Dependência
+
+					services.AddSingleton<IValidationAttributeAdapterProvider, MoedaValidationAttributeAdapterProvider>();
+
+		-> Formatação da exibição na View
+
+			@item.Valor.ToString("C")
+
+			-> Não necessita do @Html.DisplayFor (Não sei porque, já que os outros items estão usando)
+			-> o "C" vêm da palavra em inglês Currency(Moeda)
+
+	__________________________________________________________________________________________________
