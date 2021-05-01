@@ -44,7 +44,6 @@ function BuscaCep() {
     $(document).ready(function () {
 
         function limpa_formulário_cep() {
-            // Limpa valores do formulário de cep.
             $("#Endereco_Logradouro").val("");
             $("#Endereco_Bairro").val("");
             $("#Endereco_Cidade").val("");
@@ -57,7 +56,6 @@ function BuscaCep() {
             //Nova variável "cep" somente com dígitos.
             var cep = $(this).val().replace(/\D/g, '');
 
-            //Verifica se campo cep possui valor informado.
             if (cep != "") {
 
                 //Expressão regular para validar o CEP.
@@ -82,14 +80,14 @@ function BuscaCep() {
                                 $("#Endereco_Bairro").val(dados.bairro);
                                 $("#Endereco_Cidade").val(dados.localidade);
                                 $("#Endereco_Estado").val(dados.uf);
-                            } //end if.
+                            }
                             else {
                                 //CEP pesquisado não foi encontrado.
                                 limpa_formulário_cep();
                                 alert("CEP não encontrado.");
                             }
                         });
-                } //end if.
+                }
                 else {
                     //cep é inválido.
                     limpa_formulário_cep();
