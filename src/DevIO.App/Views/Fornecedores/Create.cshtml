@@ -8,10 +8,12 @@
 
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-10">
         <form asp-action="Create">
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @*O asp-validation-summary está sendo substituído aqui pelo ViewComponent, onde já está sendo utilizado*@
+            @*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
+            <vc:Summary></vc:Summary>
 
             <div class="form-group">
                 <label asp-for="Nome" class="control-label"></label>
@@ -34,9 +36,9 @@
                     <input class="form-check-input" asp-for="Ativo" /> @Html.DisplayNameFor(model => model.Ativo)
                 </label>
             </div>
-            
+
             <h4>Endereço</h4>
-            <hr/>
+            <hr />
             <partial name="_Endereco" />
 
             <div class="form-group">
