@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,6 +29,7 @@ namespace DevIO.App.ViewModels
         public string Descricao { get; set; }
 
         [DisplayName("Imagem do Produto")]
+        [NotMapped]
         public IFormFile ImagemUpload { get; set; }
 
         public string Imagem { get; set; }
@@ -35,14 +37,17 @@ namespace DevIO.App.ViewModels
         [Moeda]
         [Required(ErrorMessage = "O campo {0} é obrigatório")]
         public decimal Valor { get; set; }
-        
+
         [ScaffoldColumn(false)]
         public DateTime DataCadastro { get; set; }
-        
+
         [DisplayName("Ativo?")]
         public bool Ativo { get; set; }
-        
+
+        [NotMapped]
         public FornecedorViewModel Fornecedor { get; set; }
+
+        [NotMapped]
         public IEnumerable<FornecedorViewModel> Fornecedores { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using DevIO.Business.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
 
 namespace DevIO.Data.Mappings
 {
@@ -15,11 +14,9 @@ namespace DevIO.Data.Mappings
                 .IsRequired()
                 .HasColumnType("varchar(200)");
 
-
             builder.Property(p => p.Descricao)
                 .IsRequired()
                 .HasColumnType("varchar(1000)");
-
 
             builder.Property(p => p.Imagem)
                 .IsRequired()

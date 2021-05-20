@@ -16,7 +16,7 @@ Controllers
 		
 		-> Os nomes das actions devem ser os mesmos informados nas rotas
 		
-		-> Permite a sobrecarga de rotas através de da definição de rotas via Attributes
+		-> Permite a sobrecarga de rotas através da definição de rotas via Attributes
 			-> Definidos sobre o nome das Controllers ou sobre as Actions
 		
 		-> A definicição de rotas via Attributes funciona diretamente, sem necessidade de configuração adicional (no Asp.net MVC5 era necessário)
